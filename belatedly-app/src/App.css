@@ -1,0 +1,65 @@
+.app {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.app-header {
+  border-bottom: 3px solid black;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  margin-bottom: 12px;
+}
+
+.app-header h1 a {
+  text-decoration: none;
+}
+
+.app-header h1 a:visited {
+  color: black;
+}
+
+header nav li {
+  display: inline;
+
+}
+
+header nav li + li {
+  margin-left: 16px;
+}
+
+table {
+  text-align: left;
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+}
+
+thead th:nth-child(1) {
+  width: 24px;
+  text-align: center;
+}
+
+tbody td:nth-child(1) {
+  text-align: center;
+}
+
+table, td, th {
+  border: 1px solid #eee;
+}
+
+.datePart {
+  max-width: 30px;
+}
+
+.datePartYear {
+  max-width: 60px;
+}
+
+.dateSeparator {
+  padding: 0 5px;
+}
