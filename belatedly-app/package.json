@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@azure/msal-browser": "^2.8.0",
+    "@reduxjs/toolkit": "^1.5.0",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
@@ -10,7 +12,7 @@
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.56",
     "@types/react-dom": "^16.9.8",
-    "@types/react-redux": "^7.1.11",
+    "@types/react-redux": "^7.1.15",
     "@types/react-router": "^5.1.8",
     "@types/react-router-dom": "^5.1.6",
     "prettier": "^2.1.2",
@@ -19,6 +21,7 @@
     "react-redux": "^7.2.2",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.0",
+    "redux-devtools-extension": "^2.13.8",
     "typescript": "^4.0.3",
     "web-vitals": "^0.2.4"
   },
