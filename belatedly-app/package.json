@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "@azure/msal-browser": "^2.8.0",
+    "@microsoft/microsoft-graph-client": "^2.2.1",
+    "@microsoft/microsoft-graph-types": "^1.28.0",
     "@reduxjs/toolkit": "^1.5.0",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
@@ -15,6 +17,7 @@
     "@types/react-redux": "^7.1.15",
     "@types/react-router": "^5.1.8",
     "@types/react-router-dom": "^5.1.6",
+    "nanoid": "^3.1.20",
     "prettier": "^2.1.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",

@@ -27,110 +27,84 @@ const EMPTY_ACCOUNT_INFO: AccountInfo = {
   localAccountId: '',
 };
 
-/**
- * Handles authentication with Azure AD
- */
-export class Auth {
-  private myMSALObj: PublicClientApplication;
-  private account: AccountInfo;
-  private loginRequest: PopupRequest;
-  private profileRequest: PopupRequest;
-  private silentProfileRequest: SilentRequest;
+const loginRequest: PopupRequest = {
+  scopes: ['Calendars.ReadWrite', 'MailboxSettings.Read'],
+};
 
-  constructor() {
-    this.myMSALObj = new PublicClientApplication(MSAL_CONFIG);
-    this.account = EMPTY_ACCOUNT_INFO;
+const profileRequest: PopupRequest = {
+  scopes: ['User.Read', 'Calendars.ReadWrite', 'MailboxSettings.Read'],
+};
 
-    this.loginRequest = {
-      scopes: [],
-    };
+const silentProfileRequest: SilentRequest = {
+  scopes: ['openid', 'profile', 'User.Read', 'Calendars.ReadWrite', 'MailboxSettings.Read'],
+  account: EMPTY_ACCOUNT_INFO,
+  forceRefresh: false,
+};
 
-    this.profileRequest = {
-      scopes: ['User.Read'],
-    };
+const msalApplication = new PublicClientApplication(MSAL_CONFIG);
 
-    this.silentProfileRequest = {
-      scopes: ['openid', 'profile', 'User.Read'],
-      account: EMPTY_ACCOUNT_INFO,
-      forceRefresh: false,
-    };
-  }
+class AccountNotFoundError extends Error {}
 
-  private getAccount(): AccountInfo {
-    const currentAccounts = this.myMSALObj.getAllAccounts();
-    if (currentAccounts === null) {
-      console.log('No accounts detected');
-      return EMPTY_ACCOUNT_INFO;
-    }
-
-    return currentAccounts[0];
-  }
-
-  private handlePopupResponse(response: AuthenticationResult | null) {
-    if (response !== null) {
-      this.account = response.account ?? EMPTY_ACCOUNT_INFO;
+export const login = async (): Promise<void> => {
+  try {
+    await msalApplication.ssoSilent({
+      loginHint: getAccount().username,
+    });
+  } catch (err) {
+    if (
+      err instanceof InteractionRequiredAuthError ||
+      err instanceof AccountNotFoundError
+    ) {
+      await msalApplication.loginPopup(loginRequest);
     } else {
-      this.account = this.getAccount();
+      throw err;
     }
   }
+};
 
-  login(): void {
-    this.myMSALObj
-      .loginPopup(this.loginRequest)
-      .then((resp: AuthenticationResult) => {
-        this.handlePopupResponse(resp);
-      })
-      .catch(console.error);
-  }
+export const logout = (): void => {
+  const logOutRequest: EndSessionRequest = { account: getAccount() };
+  msalApplication.logout(logOutRequest);
+};
 
-  /**
-   * Logs out of current account.
-   */
-  logout(): void {
-    const logOutRequest: EndSessionRequest = {
-      account: this.account,
-    };
+const getAccount = (): AccountInfo => {
+  const accounts = msalApplication.getAllAccounts();
+  if (accounts.length === 0) throw new AccountNotFoundError('No account found');
+  return accounts[0];
+};
 
-    this.myMSALObj.logout(logOutRequest);
-  }
+export const getProfileTokenPopup = async (): Promise<string> => {
+  return getTokenPopup(
+    { ...silentProfileRequest, account: getAccount() },
+    profileRequest,
+  );
+};
 
-  /**
-   * Gets the token to read user profile data from MS Graph silently, or falls back to interactive popup.
-   */
-  async getProfileTokenPopup(): Promise<string> {
-    this.silentProfileRequest.account = this.account;
-    return this.getTokenPopup(this.silentProfileRequest, this.profileRequest);
-  }
-
-  /**
-   * Gets a token silently, or falls back to interactive popup.
-   */
-  private async getTokenPopup(
-    silentRequest: SilentRequest,
-    interactiveRequest: PopupRequest,
-  ): Promise<string> {
-    try {
-      const response: AuthenticationResult = await this.myMSALObj.acquireTokenSilent(
-        silentRequest,
-      );
-      return response.accessToken;
-    } catch (e) {
-      console.log('Silent token acquisition failed');
-      if (e instanceof InteractionRequiredAuthError) {
-        console.log('Acquiring token using redirect');
-        return this.myMSALObj
-          .acquireTokenPopup(interactiveRequest)
-          .then((resp) => {
-            return resp.accessToken;
-          })
-          .catch((err) => {
-            console.error(err);
-            return '';
-          });
-      } else {
-        console.error(e);
-        return '';
-      }
+const getTokenPopup = async (
+  silentRequest: SilentRequest,
+  interactiveRequest: PopupRequest,
+): Promise<string> => {
+  try {
+    const response: AuthenticationResult = await msalApplication.acquireTokenSilent(
+      silentRequest,
+    );
+    return response.accessToken;
+  } catch (e) {
+    console.log('Silent token acquisition failed');
+    if (e instanceof InteractionRequiredAuthError) {
+      console.log('Acquiring token using redirect');
+      return msalApplication
+        .acquireTokenPopup(interactiveRequest)
+        .then((resp) => {
+          return resp.accessToken;
+        })
+        .catch((err) => {
+          console.error(err);
+          return '';
+        });
+    } else {
+      console.error(e);
+      return '';
     }
   }
-}
+};

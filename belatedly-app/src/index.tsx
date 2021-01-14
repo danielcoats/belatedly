@@ -4,7 +4,30 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Provider } from 'react-redux';
-import store from './redux/store';
+import store from './store';
+import {
+  appLoadingCompleted,
+  appLoadingStarted,
+  getUserProfile,
+  getUserTimezone,
+  loginRequested,
+} from './features/app/appSlice';
+import {
+  fetchBirthdayCalendarId,
+  fetchBirthdays,
+} from './features/birthdays/birthdaysSlice';
+
+const initializeUser = async () => {
+  store.dispatch(appLoadingStarted());
+  await store.dispatch(loginRequested());
+  await store.dispatch(getUserProfile());
+  await store.dispatch(getUserTimezone());
+  await store.dispatch(fetchBirthdayCalendarId());
+  await store.dispatch(fetchBirthdays());
+  store.dispatch(appLoadingCompleted());
+};
+
+initializeUser();
 
 ReactDOM.render(
   <React.StrictMode>

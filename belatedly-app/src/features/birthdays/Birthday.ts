@@ -1,7 +1,8 @@
 export interface Birthday {
-  id: number;
+  id: string;
   name: string;
-  date: Date;
+  date: string;
   editing: boolean;
   checked: boolean;
+  externalId?: string;
 }

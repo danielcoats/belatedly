@@ -1,65 +1,64 @@
 import React from 'react-dom';
 import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import {
-  addBirthday,
-  toggleEditingBirthday,
-  updateBirthday,
-} from '../redux/actions';
-import { MONTHS } from '../dateConstants';
+
+import { getNextBirthday, MONTHS } from '../utils/dateUtils';
 import { Birthday } from '../features/birthdays/Birthday';
+import {
+  addBirthdayRequested,
+  birthdayEditingToggled,
+  updateBirthdayRequested,
+} from '../features/birthdays/birthdaysSlice';
 
 interface EditBirthdayTableRowProps {
   birthday?: Birthday;
 }
 
 export function EditBirthdayTableRow({ birthday }: EditBirthdayTableRowProps) {
-  const DEFAULT_DAY = 1;
+  const DEFAULT_DAY = '1';
   const DEFAULT_MONTH = 0;
-  const DEFAULT_YEAR = 2000;
 
   const adding = birthday === undefined;
 
+  const [formDisabled, setFormDisabled] = useState<boolean>(false);
   const [name, setName] = useState<string>(birthday?.name ?? '');
-  const [day, setDay] = useState<number>(
-    birthday?.date.getDate() || DEFAULT_DAY,
+  const [day, setDay] = useState<string>(
+    birthday ? new Date(birthday.date).getDate().toString() : DEFAULT_DAY,
   );
   const [month, setMonth] = useState<number>(
-    birthday?.date.getMonth() || DEFAULT_MONTH,
-  );
-  const [year, setYear] = useState<number>(
-    birthday?.date.getFullYear() || DEFAULT_YEAR,
+    birthday ? new Date(birthday.date).getMonth() : DEFAULT_MONTH,
   );
 
   const dispatch = useDispatch();
-  const toggleEditingCallback = useCallback(
+  const birthdayEditingToggledCallback = useCallback(
     () =>
       birthday?.id !== undefined &&
-      dispatch(toggleEditingBirthday(birthday.id)),
+      dispatch(birthdayEditingToggled(birthday.id)),
     [dispatch, birthday],
   );
-  const addBirthdayCallback = useCallback(
-    (date: Date) => dispatch(addBirthday({ name, date })),
+  const birthdayAddedCallback = useCallback(
+    (date: Date) => dispatch(addBirthdayRequested(name, date.toISOString())),
     [dispatch, name],
   );
-  const updateBirthdayCallback = useCallback(
-    (date: Date) =>
-      birthday?.id !== undefined &&
-      dispatch(updateBirthday(birthday.id, name, date)),
-    [dispatch, birthday, name],
+  const birthdayUpdatedCallback = useCallback(
+    (id: string, date: Date) =>
+      dispatch(updateBirthdayRequested(id, name, date.toISOString())),
+    [dispatch, name],
   );
 
-  function validateAndSubmit() {
-    const date = new Date(year, month, day);
+  async function validateAndSubmit() {
+    const nextOccurrence = getNextBirthday(parseInt(day), month);
 
-    if (name && date) {
+    if (name && nextOccurrence) {
+      setFormDisabled(true);
       if (adding) {
-        addBirthdayCallback(date);
+        await birthdayAddedCallback(nextOccurrence);
         clearForm();
       } else if (birthday !== undefined) {
-        updateBirthdayCallback(date);
-        clearForm();
+        await birthdayUpdatedCallback(birthday.id, nextOccurrence);
       }
+      clearForm();
+      setFormDisabled(false);
     }
   }
 
@@ -67,12 +66,13 @@ export function EditBirthdayTableRow({ birthday }: EditBirthdayTableRowProps) {
     setName('');
     setMonth(DEFAULT_MONTH);
     setDay(DEFAULT_DAY);
-    setYear(DEFAULT_YEAR);
   }
 
   return (
     <tr>
-      <td></td>
+      <td>
+        <input type="checkbox" disabled />
+      </td>
       <td>
         <input
           type="text"
@@ -80,6 +80,7 @@ export function EditBirthdayTableRow({ birthday }: EditBirthdayTableRowProps) {
           placeholder="Alex Smith"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          disabled={formDisabled}
         />
       </td>
       <td>
@@ -88,41 +89,38 @@ export function EditBirthdayTableRow({ birthday }: EditBirthdayTableRowProps) {
           max="31"
           className="datePart"
           type="number"
-          placeholder=""
           value={day}
-          onChange={(e) => setDay(parseInt(e.target.value))}
+          onChange={(e) => setDay(e.target.value)}
+          disabled={formDisabled}
         />
         <span className="dateSeparator">/</span>
         <select
           value={month}
-          onChange={(e) => setMonth(parseInt(e.target.value))}>
+          onChange={(e) => setMonth(parseInt(e.target.value))}
+          disabled={formDisabled}>
           {MONTHS.map((curr, i) => (
             <option key={i} value={i}>
               {curr}
             </option>
           ))}
         </select>
-        <span className="dateSeparator">/</span>
-        <input
-          min="1900"
-          max={new Date().getFullYear()}
-          className="datePart datePartYear"
-          type="number"
-          placeholder=""
-          value={year}
-          onChange={(e) => setYear(parseInt(e.target.value))}
-        />
       </td>
       <td>
-        <button type="submit" onClick={validateAndSubmit}>
+        <button
+          disabled={formDisabled}
+          type="submit"
+          onClick={validateAndSubmit}>
           {adding ? 'Add' : 'Save'}
         </button>
         {adding ? (
-          <button type="submit" onClick={clearForm}>
+          <button disabled={formDisabled} type="submit" onClick={clearForm}>
             Clear
           </button>
         ) : (
-          <button type="submit" onClick={toggleEditingCallback}>
+          <button
+            disabled={formDisabled}
+            type="submit"
+            onClick={birthdayEditingToggledCallback}>
             Cancel
           </button>
         )}

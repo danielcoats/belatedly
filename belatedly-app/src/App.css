@@ -23,9 +23,26 @@
   color: black;
 }
 
+.app-footer {
+  margin: 24px 0;
+}
+
 header nav li {
   display: inline;
+}
 
+header nav li a,
+header nav li button {
+  font-size: 16px;
+  color: rgb(0, 0, 238);
+}
+
+header nav li button {
+  background: none !important;
+  border: none;
+  padding: 0 !important;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 header nav li + li {
@@ -48,7 +65,9 @@ tbody td:nth-child(1) {
   text-align: center;
 }
 
-table, td, th {
+table,
+td,
+th {
   border: 1px solid #eee;
 }
 
@@ -62,4 +81,8 @@ table, td, th {
 
 .dateSeparator {
   padding: 0 5px;
+}
+
+button.import-from-file {
+  margin-bottom: 10px;
 }

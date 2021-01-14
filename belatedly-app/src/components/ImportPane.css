@@ -1,0 +1,21 @@
+.import-pane {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+table {
+  background-color: white;
+  margin-top: 10px;
+}
+
+.close-button {
+  display: block;
+  margin-top: 10px;
+}
+
+.import-button {
+  display: block;
+  margin-top: 10px;
+}

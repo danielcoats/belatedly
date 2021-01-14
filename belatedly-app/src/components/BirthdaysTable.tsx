@@ -1,34 +1,43 @@
 import React from 'react-dom';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { deleteCheckedBirthdays, toggleAllChecked } from '../redux/actions';
 import { EditBirthdayTableRow } from './EditBirthdayTableRow';
 import { BirthdayTableRow } from './BirthdayTableRow';
 import {
-  birthdaysSelector,
-  showDeleteButtonSelector,
-} from '../redux/selectors';
+  allBirthdaysToggled,
+  deleteCheckedBirthdaysRequested,
+  selectBirthdays,
+  selectShowDeleteButton,
+} from '../features/birthdays/birthdaysSlice';
 
 export function BirthdaysTable() {
+  const [deleteAllDisabled, setDeleteAllDisabled] = useState<boolean>(false);
+
   const dispatch = useDispatch();
-  const birthdays = useSelector(birthdaysSelector, shallowEqual);
-  const showDeleteButton = useSelector(showDeleteButtonSelector);
-  const toggleAllCheckedCallback = useCallback(
-    () => dispatch(toggleAllChecked()),
+  const birthdays = useSelector(selectBirthdays, shallowEqual);
+  const showDeleteButton = useSelector(selectShowDeleteButton);
+  const allBirthdaysToggledCallback = useCallback(
+    () => dispatch(allBirthdaysToggled()),
     [dispatch],
   );
   const deleteCheckedBirthdaysCallback = useCallback(
-    () => dispatch(deleteCheckedBirthdays()),
+    () => dispatch(deleteCheckedBirthdaysRequested()),
     [dispatch],
   );
 
+  const onDeleteAllClicked = async () => {
+    setDeleteAllDisabled(true);
+    await deleteCheckedBirthdaysCallback();
+    setDeleteAllDisabled(false);
+  };
+
   return (
-    <>
-      <table className="birthdays-table">
+    <div className="birthdays-table">
+      <table>
         <thead>
           <tr>
             <th>
-              <input type="checkbox" onClick={toggleAllCheckedCallback} />
+              <input type="checkbox" onClick={allBirthdaysToggledCallback} />
             </th>
             <th>Name</th>
             <th>Birthday</th>
@@ -36,17 +45,21 @@ export function BirthdaysTable() {
           </tr>
         </thead>
         <tbody>
-          {birthdays.map((birthday) => (
-            <BirthdayTableRow key={birthday.id} birthday={birthday} />
-          ))}
           <EditBirthdayTableRow />
+          {birthdays.map((birthday) => (
+            <BirthdayTableRow key={birthday.id} id={birthday.id} />
+          ))}
         </tbody>
       </table>
       {showDeleteButton && (
-        <button type="submit" onClick={deleteCheckedBirthdaysCallback}>
-          Delete
+        <button
+          className="delete-button"
+          disabled={deleteAllDisabled}
+          type="submit"
+          onClick={onDeleteAllClicked}>
+          Delete All
         </button>
       )}
-    </>
+    </div>
   );
 }
